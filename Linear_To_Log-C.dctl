@@ -1,0 +1,15 @@
+// Linear To ARRI Log-C (EI800), written by Nico Wieseneder, www.demystify-color.com
+
+__DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B)
+
+{
+
+    const float r = p_R > 0.010591f ? 0.24719f * _log10f(5.555556f * p_R + 0.052272f) + 0.385537f : 5.367655f * p_R + 0.092809f;
+    
+    const float g = p_G > 0.010591f ? 0.24719f * _log10f(5.555556f * p_G + 0.052272f) + 0.385537f : 5.367655f * p_G + 0.092809f;
+    
+    const float b = p_B > 0.010591f ? 0.24719f * _log10f(5.555556f * p_B + 0.052272f) + 0.385537f : 5.367655f * p_B + 0.092809f;
+    
+    return make_float3(r, g, b);
+    
+}
