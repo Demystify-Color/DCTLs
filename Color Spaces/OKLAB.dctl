@@ -1,0 +1,99 @@
+/*
+	Written by Nico Wieseneder, www.demystify-color.com
+	
+	Original C++ code by Björn Ottosson https://bottosson.github.io/posts/oklab/
+	
+	Thanks a ton to Matthias Stoopman (https://www.matthiasstoopman.com/) who provided me with the
+	Cubic Root Function (cbrtf), sourced from: https://www.delftstack.com/howto/python/python-cube-root/
+	
+	Learned a lot of coding and by reading through DCTLs from Jed Smith (https://github.com/jedypod/).
+	I also used a lot of tools from him to verify that my matrices and conversions are correct. 
+	
+	Adapted the direction switch from Quinn Leiho's Cone Coordinates DCTL which can be found here: (https://liftgammagain.com/forum/index.php?threads/spherical-coordinates-color-space-dctl.16898/)
+*/
+
+
+__DEVICE__ float cbrtf(float x, float cube_root) {
+
+	if (x < 0.0f){
+	x = fabs (x);
+	cube_root = pow(x,1.0f/3.0f)*(-1.0f);
+	} else cube_root = pow(x,1.0f/3.0f);
+	
+return cube_root;
+
+}
+
+
+__DEVICE__ float3 awg_to_oklab(float3 rgb) {
+	
+	// ALEXA Wide Gamut RGB To CIE 1931 XYZ
+		const float rawg = (rgb.x * 0.63800764f) + (rgb.y * 0.21470386f) + (rgb.z * 0.09774445f);
+		const float gawg = (rgb.x * 0.29195377f) + (rgb.y * 0.82384104f) + (rgb.z * -0.11579482f);
+		const float bawg = (rgb.x * 0.00279827f) + (rgb.y * -0.06703423f) + (rgb.z * 1.15329373f);
+
+	// CIE 1931 XYZ To LMS
+		const float l = (rawg * 0.8189330101f) + (gawg * 0.3618667424f) + (bawg * -0.1288597137f);
+		const float m = (rawg * 0.0329845436f) + (gawg * 0.9293118715f) + (bawg * 0.0361456387f);
+		const float s = (rawg * 0.0482003018f) + (gawg * 0.2643662691f) + (bawg * 0.6338517070f);
+			
+	// LMS Non-Linearity 	
+		const float l_prime = cbrtf(l,0.0f);	
+		const float m_prime = cbrtf(m,0.0f);	
+		const float s_prime = cbrtf(s,0.0f);
+
+	// LMS Non-Linearity To OKLAB
+		const float l_lab = (l_prime * 0.2104542553f) + (m_prime * 0.7936177850f) + (s_prime * -0.0040720468f);
+		const float a_lab = (l_prime * 1.9779984951f) + (m_prime * -2.4285922050f) + (s_prime * 0.4505937099f);
+		const float b_lab = (l_prime * 0.0259040371f) + (m_prime * 0.7827717662f) + (s_prime * -0.8086757660f);
+		
+		return make_float3(l_lab, a_lab, b_lab);
+		
+	}
+	
+	
+__DEVICE__ float3 oklab_to_awg(float3 lab) {
+
+// OKLAB To LMS Non-Linearity 
+	float l_prime = (lab.x * 1.00000000f) + (lab.y * 0.39633784f) + (lab.z * 0.21580376f);
+	float m_prime = (lab.x * 1.00000000f) + (lab.y * -0.10556135f) + (lab.z * -0.06385418f);
+	float s_prime = (lab.x * 1.00000000f) + (lab.y * -0.08948418f) + (lab.z * -1.29148555f);
+	
+// LMS Non-Linearity To LMS
+	float l = pow(l_prime,3);
+	float m = pow(m_prime,3);
+	float s = pow(s_prime,3);
+	
+// LMS To CIE 1931 XYZ  
+	float rxyz = (l * 1.2270138511f) + (m * -0.55779998065f) + (s * 0.2812561489f);
+	float gxyz = (l * -0.0405801784f) + (m * 1.1122568696f) + (s * -0.0716766786f);
+	float bxyz = (l * -0.0763812845f) + (m * -0.4214819784f) + (s * 1.5861632204f);
+		
+// CIE 1931 XYZ To ALEXA Wide Gamut RGB 	
+	float r = (rxyz * 1.78906548f) + (gxyz * -0.48253384f) + (bxyz * -0.20007578f);
+	float g = (rxyz * -0.63984859f) + (gxyz * 1.39639986f) + (bxyz * 0.19443229f);
+	float b = (rxyz * -0.04153153f) + (gxyz * 0.08233536f) + (bxyz * 0.8788684f);
+	
+	return make_float3(r, g, b);
+	}
+		
+		
+DEFINE_UI_PARAMS(DIRECTION, Direction, DCTLUI_COMBO_BOX, 0, {Forward, Inverse}, {AWG to OKLAB, OKLAB to AWG})
+		
+__DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B) {
+	
+	float3 rgb = make_float3(p_R, p_G, p_B);
+	
+	switch (DIRECTION) {
+		case Forward:
+			rgb = awg_to_oklab(rgb);
+			break;
+		case Inverse:
+			rgb = oklab_to_awg(rgb);
+			break;
+	}
+
+	return rgb;
+}
+	
+	
