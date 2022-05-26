@@ -16,9 +16,9 @@
 __DEVICE__ float cbrtf(float x, float cube_root) {
 
 	if (x < 0.0f){
-	x = fabs (x);
-	cube_root = pow(x,1.0f/3.0f)*(-1.0f);
-	} else cube_root = pow(x,1.0f/3.0f);
+	x = _fabs(x);
+	cube_root = _powf(x, 1.0f/3.0f)*(-1.0f);
+	} else cube_root = _powf(x, 1.0f/3.0f);
 	
 return cube_root;
 
@@ -55,24 +55,24 @@ __DEVICE__ float3 awg_to_oklab(float3 rgb) {
 __DEVICE__ float3 oklab_to_awg(float3 lab) {
 
 // OKLAB To LMS Non-Linearity 
-	float l_prime = (lab.x * 1.00000000f) + (lab.y * 0.39633784f) + (lab.z * 0.21580376f);
-	float m_prime = (lab.x * 1.00000000f) + (lab.y * -0.10556135f) + (lab.z * -0.06385418f);
-	float s_prime = (lab.x * 1.00000000f) + (lab.y * -0.08948418f) + (lab.z * -1.29148555f);
+	const float l_prime = (lab.x * 1.00000000f) + (lab.y * 0.39633784f) + (lab.z * 0.21580376f);
+	const float m_prime = (lab.x * 1.00000000f) + (lab.y * -0.10556135f) + (lab.z * -0.06385418f);
+	const float s_prime = (lab.x * 1.00000000f) + (lab.y * -0.08948418f) + (lab.z * -1.29148555f);
 	
 // LMS Non-Linearity To LMS
-	float l = pow(l_prime,3);
-	float m = pow(m_prime,3);
-	float s = pow(s_prime,3);
+	const float l = _powf(l_prime,3);
+	const float m = _powf(m_prime,3);
+	const float s = _powf(s_prime,3);
 	
 // LMS To CIE 1931 XYZ  
-	float rxyz = (l * 1.2270138511f) + (m * -0.55779998065f) + (s * 0.2812561489f);
-	float gxyz = (l * -0.0405801784f) + (m * 1.1122568696f) + (s * -0.0716766786f);
-	float bxyz = (l * -0.0763812845f) + (m * -0.4214819784f) + (s * 1.5861632204f);
+	const float rxyz = (l * 1.2270138511f) + (m * -0.55779998065f) + (s * 0.2812561489f);
+	const float gxyz = (l * -0.0405801784f) + (m * 1.1122568696f) + (s * -0.0716766786f);
+	const float bxyz = (l * -0.0763812845f) + (m * -0.4214819784f) + (s * 1.5861632204f);
 		
 // CIE 1931 XYZ To ALEXA Wide Gamut RGB 	
-	float r = (rxyz * 1.78906548f) + (gxyz * -0.48253384f) + (bxyz * -0.20007578f);
-	float g = (rxyz * -0.63984859f) + (gxyz * 1.39639986f) + (bxyz * 0.19443229f);
-	float b = (rxyz * -0.04153153f) + (gxyz * 0.08233536f) + (bxyz * 0.8788684f);
+	const float r = (rxyz * 1.78906548f) + (gxyz * -0.48253384f) + (bxyz * -0.20007578f);
+	const float g = (rxyz * -0.63984859f) + (gxyz * 1.39639986f) + (bxyz * 0.19443229f);
+	const float b = (rxyz * -0.04153153f) + (gxyz * 0.08233536f) + (bxyz * 0.8788684f);
 	
 	return make_float3(r, g, b);
 	}
