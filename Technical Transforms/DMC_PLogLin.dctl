@@ -1,0 +1,62 @@
+/*
+    Written by Nico Wieseneder, www.demystify-color.com
+    
+    PLogLin idea with original math invented by Joshua Pines
+    
+    Websites I used for coming up with this DCTL:
+    https://natron.readthedocs.io/en/v2.3.15/plugins/net.sf.openfx.PLogLin.html
+    https://lists.gnu.org/archive/html/openexr-devel/2005-03/msg00006.html
+    https://learn.foundry.com/nuke/content/reference_guide/color_nodes/ploglin.html
+
+    Thanks a lot to Kaur Hendrikson (https://kaurh.gumroad.com/) for the trick with dividing my UI
+    slider by 10, 100, 1000,.. to get more decimal precision! 
+*/
+
+DEFINE_UI_PARAMS(linear_ref, Linear Reference, DCTLUI_SLIDER_FLOAT, 0.18, 0.0, 1.0, 0.01)
+DEFINE_UI_PARAMS(log_ref, Log Reference, DCTLUI_SLIDER_FLOAT, 445, 0.0, 1023.0, 0.1)
+DEFINE_UI_PARAMS(n_gamma, Negative Gamma, DCTLUI_SLIDER_FLOAT, 6.0, 0.0, 24.999, 0.001)
+DEFINE_UI_PARAMS(density, Density, DCTLUI_SLIDER_FLOAT, 2.0, 0.0, 9.999, 0.001)
+DEFINE_UI_PARAMS(to_lin, Log To Linear, DCTLUI_CHECK_BOX, 1)
+DEFINE_UI_PARAMS(to_log, Linear To Log, DCTLUI_CHECK_BOX, 0)
+
+
+__DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B)
+{
+    float3 rgb = {p_R, p_G, p_B};
+
+    if (to_lin == 1) {
+    
+       rgb.x = linear_ref * _powf(10.f, (rgb.x * 1023.f - log_ref) * (density / 1000) / (n_gamma / 10));
+       rgb.y = linear_ref * _powf(10.f, (rgb.y * 1023.f - log_ref) * (density / 1000) / (n_gamma / 10));
+       rgb.z = linear_ref * _powf(10.f, (rgb.z * 1023.f - log_ref) * (density / 1000) / (n_gamma / 10));
+        
+    }
+    
+
+    if (to_log == 1) {
+
+        rgb.x = _fmaxf(rgb.x / linear_ref, 1e-10);
+        rgb.y = _fmaxf(rgb.y / linear_ref, 1e-10);
+        rgb.z = _fmaxf(rgb.z / linear_ref, 1e-10);
+
+        rgb.x = log_ref + _log10f(rgb.x) * ((n_gamma / 10) / (density / 1000));
+        rgb.y = log_ref + _log10f(rgb.y) * ((n_gamma / 10) / (density / 1000));
+        rgb.z = log_ref + _log10f(rgb.z) * ((n_gamma / 10) / (density / 1000));
+
+        rgb /= 1023.f;
+
+    }
+
+    return rgb;
+
+}
+
+
+
+
+
+
+
+
+
+
