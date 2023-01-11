@@ -83,9 +83,9 @@ __DEVICE__ float3 lch_to_awg(float3 lch) {
 	const float s_prime = (lab_l * 1.00000000f) + (lab_a * -0.08948418f) + (lab_b * -1.29148555f);
 	
 // LMS Non-Linearity To LMS
-	const float l = _powf(l_prime,3);
-	const float m = _powf(m_prime,3);
-	const float s = _powf(s_prime,3);
+	const float l = _copysignf(_powf(fabs(l_prime,3), l_prime);
+	const float m = _copysignf(_powf(fabs(m_prime,3), m_prime);
+	const float s = _copysignf(_powf(fabs(s_prime,3), s_prime);
 	
 // LMS To CIE 1931 XYZ  
 	const float rxyz = (l * 1.2270138511f) + (m * -0.55779998065f) + (s * 0.2812561489f);
