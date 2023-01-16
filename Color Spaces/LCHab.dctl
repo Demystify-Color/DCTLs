@@ -16,7 +16,29 @@
 	LCH(ab) math found at http://brucelindbloom.com/
 	
 	Radian To Degree Conversion adapted by myself from: https://www.geeksforgeeks.org/program-convert-radian-degree/?ref=lbp
+
+	Thanks a lot to Jan Karow who provided me with the inset & outset idea for avoiding negative values on the blue
+	channel, sourced from Troy Sobotka: https://github.com/sobotka/SB2383-Configuration-Generation 
 */
+
+
+__DEVICE__ float3 rgb_inset (float3 rgb) {
+
+	const float r_inset = rgb.x * 0.8357302628472827f + rgb.y * 0.07575160430529301f + rgb.z * 0.08851819789301629f;
+	const float g_inset = rgb.x * 0.07272987026297614f + rgb.y * 0.8387515418967071f + rgb.z * 0.08851798996797691f;
+	const float b_inset = rgb.x * 0.07272966839689886f + rgb.y * 0.07575121559727113f + rgb.z * 0.8515177877383528f;
+	return make_float3(r_inset, g_inset, b_inset);
+	
+    }		
+	
+	
+__DEVICE__ float3 rgb_outset (float3 rgb) {
+
+	const float r_outset = rgb.x * 1.215294430519138f + rgb.y * -0.09928130201704202f + rgb.z * -0.11601342100604005f;
+	const float g_outset = rgb.x * -0.09532096746629887f + rgb.y * 1.2113347084396262f + rgb.z * -0.11601316464611539f;
+	const float b_outset = rgb.x * -0.09532071196581424f + rgb.y * -0.09928081562487852f + rgb.z * 1.1946030611860257f;
+	return make_float3(r_outset, g_outset, b_outset);
+	}
 
 
 __DEVICE__ float cbrtf(float x, float cube_root) {
@@ -109,6 +131,7 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
 	
 	switch (DIRECTION) {
 		case Forward:
+			rgb = rgb_inset(rgb);
 			rgb = awg_to_lch(rgb);
 
 			// Normalize Hue 0-1
@@ -121,6 +144,7 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
 			rgb.z = rgb.z * 360.f;
 			
 			rgb = lch_to_awg(rgb);
+			rgb = rgb_outset(rgb);
 			break;
 	}
 
