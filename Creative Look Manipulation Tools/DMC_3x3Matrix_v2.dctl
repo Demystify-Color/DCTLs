@@ -1,0 +1,60 @@
+/*
+3x3 Matrix ("Color Crosstalk") where you can choose if you want to automatically preserves neutrals
+or if you want a "standard matrix operation" where you also have a slider for preserving luminance all
+the way from 0 (not at all) to 1 (at full strength).
+
+Written by Nico Wieseneder, www.demystify-color.com
+Find a step by step guide on how to code this tool here:
+https://www.demystify-color.com/post/coding-your-own-tools-color-crosstalk-3x3-matrix-dctl-part-02
+*/
+
+DEFINE_UI_PARAMS(r_red, Red in Red, DCTLUI_SLIDER_FLOAT, 1.0, -1.0, 2.0, 0.001)
+DEFINE_UI_PARAMS(g_red, Green in Red, DCTLUI_SLIDER_FLOAT, 0.0, -1.0, 1.0, 0.001)
+DEFINE_UI_PARAMS(b_red, Blue in Red, DCTLUI_SLIDER_FLOAT, 0.0, -1.0, 1.0, 0.001)
+DEFINE_UI_PARAMS(r_green, Red in Green, DCTLUI_SLIDER_FLOAT, 0.0, -1.0, 1.0, 0.001)
+DEFINE_UI_PARAMS(g_green, Green in Green, DCTLUI_SLIDER_FLOAT, 1.0, -1.0, 2.0, 0.001)
+DEFINE_UI_PARAMS(b_green, Blue in Green, DCTLUI_SLIDER_FLOAT, 0.0, -1.0, 1.0, 0.001)
+DEFINE_UI_PARAMS(r_blue, Red in Blue, DCTLUI_SLIDER_FLOAT, 0.0, -1.0, 1.0, 0.001)
+DEFINE_UI_PARAMS(g_blue, Green in Blue, DCTLUI_SLIDER_FLOAT, 0.0, -1.0, 1.0, 0.001)
+DEFINE_UI_PARAMS(b_blue, Blue in Blue, DCTLUI_SLIDER_FLOAT, 1.0, -1.0, 2.0, 0.001)
+DEFINE_UI_PARAMS(presLum, Preserve Luminance, DCTLUI_SLIDER_FLOAT, 1.0, 0.0, 1.0, 0.001)
+DEFINE_UI_PARAMS(presNeut, Preserve Neutrals, DCTLUI_CHECK_BOX, 1)
+
+
+
+__DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B)
+	{
+	float3 inRGB = make_float3(p_R, p_G, p_B);
+	float3 out = inRGB;
+
+	if (presNeut == 1) {	
+	// 3x3 Matrix that automatically preserves neutrals
+	out.x = (out.x * (1 - g_red - b_red)) + (out.y * g_red) + (out.z * b_red);
+	out.y = (out.x * r_green) + (out.y * (1 - r_green - b_green) ) + (out.z * b_green);
+	out.z = (out.x * r_blue) + (out.y * g_blue) + (out.z * (1 - r_blue - g_blue));		
+	}
+	
+		else {
+			
+			// Calculate Luminance
+			float3 calcLum = make_float3(
+				(out.x * 0.333) + (out.y * 0.333) + (out.z * 0.333),
+				(out.x * 0.333) + (out.y * 0.333) + (out.z * 0.333),
+				(out.x * 0.333) + (out.y * 0.333) + (out.z * 0.333));
+			
+			// Subtract Luminance
+			out = out - (calcLum * presLum);
+			
+			// Standard 3x3 Matrix 
+			out.x = (out.x * r_red) + (out.y * g_red) + (out.z * b_red);
+			out.y = (out.x * r_green) + (out.y * g_green) + (out.z * b_green);
+			out.z = (out.x * r_blue) + (out.y * g_blue) + (out.z * b_blue);
+			
+			// Add Luminance
+			out = out + (calcLum * presLum);
+			
+		}
+
+		
+	return out;
+	}

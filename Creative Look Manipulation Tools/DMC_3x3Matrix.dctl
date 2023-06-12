@@ -1,6 +1,8 @@
 /*
 3x3 Matrix ("Color Crosstalk") that automatically preserves neutrals 
 Written by Nico Wieseneder, www.demystify-color.com
+Find a step by step guide on how to code this tool here:
+https://www.demystify-color.com/post/coding-your-own-tools-color-crosstalk-3x3-matrix-dctl-part-01
 
 */
 
