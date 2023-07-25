@@ -1,0 +1,124 @@
+/*
+3x3 Matrix ("Color Crosstalk") where you can choose if you want to automatically preserves neutrals
+or if you want a "standard matrix operation" where you also have a slider for preserving luminance all
+the way from 0 (not at all) to 1 (at full strength).
+In v3 you also have the ability to choose from various different luminance factors now! 
+
+Written by Nico Wieseneder, www.demystify-color.com
+Find a step by step guide on how to code this tool here: 
+*/
+
+DEFINE_UI_PARAMS(r_red, Red in Red, DCTLUI_SLIDER_FLOAT, 1.0, -1.0, 2.0, 0.001)
+DEFINE_UI_PARAMS(g_red, Green in Red, DCTLUI_SLIDER_FLOAT, 0.0, -1.0, 1.0, 0.001)
+DEFINE_UI_PARAMS(b_red, Blue in Red, DCTLUI_SLIDER_FLOAT, 0.0, -1.0, 1.0, 0.001)
+DEFINE_UI_PARAMS(r_green, Red in Green, DCTLUI_SLIDER_FLOAT, 0.0, -1.0, 1.0, 0.001)
+DEFINE_UI_PARAMS(g_green, Green in Green, DCTLUI_SLIDER_FLOAT, 1.0, -1.0, 2.0, 0.001)
+DEFINE_UI_PARAMS(b_green, Blue in Green, DCTLUI_SLIDER_FLOAT, 0.0, -1.0, 1.0, 0.001)
+DEFINE_UI_PARAMS(r_blue, Red in Blue, DCTLUI_SLIDER_FLOAT, 0.0, -1.0, 1.0, 0.001)
+DEFINE_UI_PARAMS(g_blue, Green in Blue, DCTLUI_SLIDER_FLOAT, 0.0, -1.0, 1.0, 0.001)
+DEFINE_UI_PARAMS(b_blue, Blue in Blue, DCTLUI_SLIDER_FLOAT, 1.0, -1.0, 2.0, 0.001)
+DEFINE_UI_PARAMS(presLum, Preserve Luminance, DCTLUI_SLIDER_FLOAT, 1.0, 0.0, 1.0, 0.001)
+DEFINE_UI_PARAMS(presNeut, Preserve Neutrals, DCTLUI_CHECK_BOX, 1)
+DEFINE_UI_PARAMS(LumFact, Luminance Factor, DCTLUI_COMBO_BOX, 4, {fact_1, fact_2, fact_3, fact_4, fact_5, fact_6}, {Rec.709, Rec.2020, ACES AP1, Minimum, Average, Maximum})
+
+
+
+__DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B)
+	{
+	float3 inRGB = make_float3(p_R, p_G, p_B);
+	float3 out = inRGB;
+
+	if (presNeut == 1) {	
+	// 3x3 Matrix that automatically preserves neutrals
+	out.x = (out.x * (1 - g_red - b_red)) + (out.y * g_red) + (out.z * b_red);
+	out.y = (out.x * r_green) + (out.y * (1 - r_green - b_green) ) + (out.z * b_green);
+	out.z = (out.x * r_blue) + (out.y * g_blue) + (out.z * (1 - r_blue - g_blue));		
+	}
+	
+		else {
+			
+			// Calculate Luminance (Rec.709)
+			float3 calcLumR709 = make_float3(
+				(out.x * 0.2126f) + (out.y * 0.7152f) + (out.z * 0.0722f),
+				(out.x * 0.2126f) + (out.y * 0.7152f) + (out.z * 0.0722f),
+				(out.x * 0.2126f) + (out.y * 0.7152f) + (out.z * 0.0722f));
+			
+			// Calculate Luminance (Rec.2020)
+			float3 calcLumR2020= make_float3(
+				(out.x * 0.2627f) + (out.y * 0.6780f) + (out.z * 0.0593f),
+				(out.x * 0.2627f) + (out.y * 0.6780f) + (out.z * 0.0593f),
+				(out.x * 0.2627f) + (out.y * 0.6780f) + (out.z * 0.0593f));
+			
+			// Calculate Luminance (ACES AP1)
+			float3 calcLumAP1 = make_float3(
+				(out.x * 0.2722287168f) + (out.y * 0.6740817658f) + (out.z * 0.0536895174f),
+				(out.x * 0.2722287168f) + (out.y * 0.6740817658f) + (out.z * 0.0536895174f),
+				(out.x * 0.2722287168f) + (out.y * 0.6740817658f) + (out.z * 0.0536895174f));
+			
+			// Calculate Luminance (Minimum)
+			float3 calcLumMin = _fminf(_fminf(out.x, out.y), out.z);
+			
+			// Calculate Luminance (Average)
+			float3 calcLumAvg = make_float3(
+				(out.x * 0.333f) + (out.y * 0.333f) + (out.z * 0.333f),
+				(out.x * 0.333f) + (out.y * 0.333f) + (out.z * 0.333f),
+				(out.x * 0.333f) + (out.y * 0.333f) + (out.z * 0.333f));
+			
+			// Calculate Luminance (Maximum)
+			float3 calcLumMax = _fmaxf(_fmaxf(out.x, out.y), out.z);
+			
+			
+			// Subtract Luminance
+			switch (LumFact) {
+				case 0:
+					out = out - (calcLumR709 * presLum);
+					break;
+				case 1:
+					out = out - (calcLumR2020 * presLum);
+					break;
+				case 2:
+					out = out - (calcLumAP1 * presLum);
+					break;
+				case 3:
+					out = out - (calcLumMin * presLum);
+					break;
+				case 4:
+					out = out - (calcLumAvg * presLum);
+					break;
+				case 5:
+					out = out - (calcLumMax * presLum);
+					break;
+			}
+				
+			// Standard 3x3 Matrix 
+			out.x = (out.x * r_red) + (out.y * g_red) + (out.z * b_red);
+			out.y = (out.x * r_green) + (out.y * g_green) + (out.z * b_green);
+			out.z = (out.x * r_blue) + (out.y * g_blue) + (out.z * b_blue);
+			
+			// Add Luminance
+			switch (LumFact) {
+				case 0:
+					out = out + (calcLumR709 * presLum);
+					break;
+				case 1:
+					out = out + (calcLumR2020 * presLum);
+					break;
+				case 2:
+					out = out + (calcLumAP1 * presLum);
+					break;
+				case 3:
+					out = out + (calcLumMin * presLum);
+					break;
+				case 4:
+					out = out + (calcLumAvg * presLum);
+					break;
+				case 5:
+					out = out + (calcLumMax * presLum);
+					break;
+			}
+			
+		}
+
+		
+	return out;
+	}
