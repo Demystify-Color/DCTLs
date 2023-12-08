@@ -4,8 +4,8 @@ or if you want a "standard matrix operation" where you also have a slider for pr
 the way from 0 (not at all) to 1 (at full strength).
 In v3 you also have the ability to choose from various different luminance factors now! 
 
-Written by Nico Wieseneder, www.demystify-color.com
-Find a step by step guide on how to code this tool here: 
+Written by Nico Fink, www.demystify-color.com
+Find a step by step guide on how to code this tool here: https://www.demystify-color.com/post/coding-your-own-tools-color-crosstalk-3x3-matrix-dctl-part-03
 */
 
 DEFINE_UI_PARAMS(r_red, Red in Red, DCTLUI_SLIDER_FLOAT, 1.0, -1.0, 2.0, 0.001)

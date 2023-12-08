@@ -1,0 +1,38 @@
+/*
+6x3 Matrix Look Manipulation Tool
+Written by Nico Fink, www.demystify-color.com
+Find a step by step guide on how to code this tool here: 
+*/
+
+DEFINE_UI_PARAMS(r_red, Red in Red, DCTLUI_SLIDER_FLOAT, 1.0, -2.0, 2.0, 0.001)
+DEFINE_UI_PARAMS(g_red, Green in Red, DCTLUI_SLIDER_FLOAT, 0.0, -1.0, 1.0, 0.001)
+DEFINE_UI_PARAMS(b_red, Blue in Red, DCTLUI_SLIDER_FLOAT, 0.0, -1.0, 1.0, 0.001)
+DEFINE_UI_PARAMS(c_red, Cyan in Red, DCTLUI_SLIDER_FLOAT, 0.0, -1.0, 1.0, 0.001)
+DEFINE_UI_PARAMS(m_red, Magenta in Red, DCTLUI_SLIDER_FLOAT, 0.0, -1.0, 1.0, 0.001)
+DEFINE_UI_PARAMS(y_red, Yellow in Red, DCTLUI_SLIDER_FLOAT, 0.0, -1.0, 1.0, 0.001)
+
+DEFINE_UI_PARAMS(r_green, Red in Green, DCTLUI_SLIDER_FLOAT, 0.0, -1.0, 1.0, 0.001)
+DEFINE_UI_PARAMS(g_green, Green in Green, DCTLUI_SLIDER_FLOAT, 1.0, -2.0, 2.0, 0.001)
+DEFINE_UI_PARAMS(b_green, Blue in Green, DCTLUI_SLIDER_FLOAT, 0.0, -1.0, 1.0, 0.001)
+DEFINE_UI_PARAMS(c_green, Cyan in Green, DCTLUI_SLIDER_FLOAT, 0.0, -1.0, 1.0, 0.001)
+DEFINE_UI_PARAMS(m_green, Magenta in Green, DCTLUI_SLIDER_FLOAT, 0.0, -1.0, 1.0, 0.001)
+DEFINE_UI_PARAMS(y_green, Yellow in Green, DCTLUI_SLIDER_FLOAT, 0.0, -1.0, 1.0, 0.001)
+
+DEFINE_UI_PARAMS(r_blue, Red in Blue, DCTLUI_SLIDER_FLOAT, 0.0, -1.0, 1.0, 0.001)
+DEFINE_UI_PARAMS(g_blue, Green in Blue, DCTLUI_SLIDER_FLOAT, 0.0, -1.0, 1.0, 0.001)
+DEFINE_UI_PARAMS(b_blue, Blue in Blue, DCTLUI_SLIDER_FLOAT, 1.0, -2.0, 2.0, 0.001)
+DEFINE_UI_PARAMS(c_blue, Cyan in Blue, DCTLUI_SLIDER_FLOAT, 0.0, -1.0, 1.0, 0.001)
+DEFINE_UI_PARAMS(m_blue, Magenta in Blue, DCTLUI_SLIDER_FLOAT, 0.0, -1.0, 1.0, 0.001)
+DEFINE_UI_PARAMS(y_blue, Yellow in Blue, DCTLUI_SLIDER_FLOAT, 0.0, -1.0, 1.0, 0.001)
+
+__DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B)
+	{
+	float3 inRGB = make_float3(p_R, p_G, p_B);
+	float3 out = inRGB;
+	
+	out.x = (out.x * r_red) + (out.y * g_red) + (out.z * b_red) + ((1 - out.x) * c_red) + ((1 - out.y) * m_red) + ((1 - out.z) * y_red);
+	out.y = (out.x * r_green) + (out.y * g_green) + (out.z * b_green) + ((1 - out.x) * c_green) + ((1 - out.y) * m_green) + ((1 - out.z) * y_green);
+	out.z = (out.x * r_blue) + (out.y * g_blue) + (out.z * b_blue) + ((1 - out.x) * c_blue) + ((1 - out.y) * m_blue) + ((1 - out.z) * y_blue);		
+		
+	return out;
+	}

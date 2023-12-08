@@ -3,7 +3,7 @@
 or if you want a "standard matrix operation" where you also have a slider for preserving luminance all
 the way from 0 (not at all) to 1 (at full strength).
 
-Written by Nico Wieseneder, www.demystify-color.com
+Written by Nico Fink, www.demystify-color.com
 Find a step by step guide on how to code this tool here:
 https://www.demystify-color.com/post/coding-your-own-tools-color-crosstalk-3x3-matrix-dctl-part-02
 */
