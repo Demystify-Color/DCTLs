@@ -1,0 +1,10 @@
+#created by Nico Fink @ demystify-color.com
+
+__DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B)
+{
+    const float r = (p_R * 0.882811f) + (p_G * 0.015109f) + (p_B * 0.102080f);
+    const float g = (p_R * 0.051487f) + (p_G * 0.771065f) + (p_B * 0.177447f);
+    const float b = (p_R * 0.024289f) + (p_G * 0.106074f) + (p_B * 0.869637f);
+ 
+    return make_float3(r, g, b);
+}
