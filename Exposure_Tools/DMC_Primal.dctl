@@ -1,0 +1,288 @@
+/*
+	Photometrically Accurate Exposure Tool For Various Log Formats + The Ability To Perform A Linear Temp & Tint Adjustment
+	Input & Output: Depending On Chosen Tone Curve
+					(Log-C, ACEScct, DaVinci Intermediate, LOG3G10, S-Log3)
+
+	Written by Nico Fink, www.demystify-color.com
+
+	Learned a lot by studying DCTLs from:
+	Paul Dore: https://github.com/baldavenger/
+	Jed Smith: https://github.com/jedypod
+	Thatcher Freeman: https://github.com/thatcherfreeman
+*/
+
+
+//Arri Log-C (EI800) To Linear
+
+__DEVICE__ float logc_2_lin( float in)
+{
+	float out = in > 0.1496582f ? (_powf(10.0f, (in - 0.385537f) / 0.2471896f) - 0.052272f) / 5.555556f : (in - 0.092809f) / 5.367655f;
+	return out;
+}
+
+__DEVICE__ float3 logc_to_lin( float3 in)
+{
+	float3 out;
+	
+	out.x = logc_2_lin(in.x);
+	out.y = logc_2_lin(in.y);
+	out.z = logc_2_lin(in.z);
+	
+	return out;
+}
+
+
+//Linear To Arri Log-C (EI800)
+
+__DEVICE__ float lin_2_logc( float in)
+{
+	float out = in > 0.010591f ? 0.24719f * _log10f(5.555556f * in + 0.052272f) + 0.385537f : 5.367655f * in + 0.092809f;
+	return out;
+}
+
+__DEVICE__ float3 lin_to_logc( float3 in)
+{
+	float3 out;
+	
+	out.x = lin_2_logc(in.x);
+	out.y = lin_2_logc(in.y);
+	out.z = lin_2_logc(in.z);
+	
+	return out;
+}
+
+
+//ACEScct To Linear
+
+__DEVICE__ float acescct_2_lin( float in)
+{
+	float out = in > 0.155251141552511f ? _powf(2.0f, in * 17.52f - 9.72f) : (in - 0.0729055341958355f) / 10.5402377416545f;
+	return out;
+}
+
+__DEVICE__ float3 acescct_to_lin( float3 in)
+{
+	float3 out;
+	
+	out.x = acescct_2_lin(in.x);
+	out.y = acescct_2_lin(in.y);
+	out.z = acescct_2_lin(in.z);
+	
+	return out;
+}
+
+//DaVinci Intermediate To Linear
+
+__DEVICE__ float dwg_2_lin( float in)
+{
+	float out = in <= 0.02740668f ? in / 10.44426855f : _powf(2.0f, (in / 0.07329248f) - 7.0f) - 0.0075f;
+	return out;
+}
+
+__DEVICE__ float3 dwg_to_lin( float3 in)
+{
+	float3 out;
+	
+	out.x = dwg_2_lin(in.x);
+	out.y = dwg_2_lin(in.y);
+	out.z = dwg_2_lin(in.z);
+	
+	return out;
+}
+
+//RED LOG3G10 To Linear
+
+__DEVICE__ float log3g10_2_lin( float in)
+{
+	float out = in > 0.0f ? (_powf(10.0f, in / 0.224282f) - 1.0f) / 155.975327f - 0.01f : (in / 15.1927f) - 0.01f;
+	return out;
+}
+
+__DEVICE__ float3 log3g10_to_lin( float3 in)
+{
+	float3 out;
+	
+	out.x = log3g10_2_lin(in.x);
+	out.y = log3g10_2_lin(in.y);
+	out.z = log3g10_2_lin(in.z);
+	
+	return out;
+}
+
+//Sony S-Log3 To Linear
+
+__DEVICE__ float slog3_2_lin( float in)
+{
+	float out = in >= 171.2102946929f / 1023.0f ? _powf(10.0f, ((in * 1023.0f - 420.0f) / 261.5f)) * (0.18f + 0.01f) - 0.01f : (in * 1023.0f - 95.0f) * 0.01125000f / (171.2102946929f - 95.0f);
+	return out;
+}
+
+__DEVICE__ float3 slog3_to_lin( float3 in)
+{
+	float3 out;
+	
+	out.x = slog3_2_lin(in.x);
+	out.y = slog3_2_lin(in.y);
+	out.z = slog3_2_lin(in.z);
+	
+	return out;
+}
+
+
+//Linear To ACEScct
+
+__DEVICE__ float lin_2_acescct( float in)
+{
+	float out = in > 0.0078125f ? (_log2f(in) + 9.72f) / 17.52f : 10.5402377416545f * in + 0.0729055341958355f;
+	return out;
+}
+
+__DEVICE__ float3 lin_to_acescct( float3 in)
+{
+	float3 out;
+	
+	out.x = lin_2_acescct(in.x);
+	out.y = lin_2_acescct(in.y);
+	out.z = lin_2_acescct(in.z);
+	
+	return out;
+}
+
+//Linear To DWG
+
+__DEVICE__ float lin_2_dwg( float in)
+{
+	float out = in <= 0.00262409f ? in * 10.44426855f : (_log2f(in + 0.0075f) + 7.0f) * 0.07329248f;
+	return out;
+}
+
+__DEVICE__ float3 lin_to_dwg( float3 in)
+{
+	float3 out;
+	
+	out.x = lin_2_dwg(in.x);
+	out.y = lin_2_dwg(in.y);
+	out.z = lin_2_dwg(in.z);
+	
+	return out;
+}
+
+//Linear To RED Log3G10
+
+__DEVICE__ float lin_2_log3g10( float in)
+{
+	float out = in > -0.01f ? 0.224282f * _log10f(((in + 0.01f) * 155.975327f) + 1.0f) : (in + 0.01f) * 15.1927f;
+	return out;
+}
+
+__DEVICE__ float3 lin_to_log3g10( float3 in)
+{
+	float3 out;
+	
+	out.x = lin_2_log3g10(in.x);
+	out.y = lin_2_log3g10(in.y);
+	out.z = lin_2_log3g10(in.z);
+	
+	return out;
+}
+
+//Linear To S-Log3
+
+__DEVICE__ float lin_2_slog3( float in)
+{
+	float out = in >= 0.01125f ? (420.0f + _log10f((in + 0.01f) / (0.18f + 0.01f)) * 261.5f) / 1023.0f : (in * (171.2102946929f - 95.0f) / 0.01125000f + 95.0f) / 1023.0f;
+	return out;
+}
+
+__DEVICE__ float3 lin_to_slog3( float3 in)
+{
+	float3 out;
+	
+	out.x = lin_2_slog3(in.x);
+	out.y = lin_2_slog3(in.y);
+	out.z = lin_2_slog3(in.z);
+	
+	return out;
+}
+
+
+DEFINE_UI_PARAMS(exposure, Exposure, DCTLUI_SLIDER_FLOAT, 0.0, -4.0, 4.0, 0.1)
+DEFINE_UI_PARAMS(temp, Temperature, DCTLUI_SLIDER_FLOAT, 0.0, -4.0, 4.0, 0.1)
+DEFINE_UI_PARAMS(tint, Tint, DCTLUI_SLIDER_FLOAT, 0.0, -4.0, 4.0, 0.1)
+DEFINE_UI_PARAMS(tonecurve, Input Tone Curve, DCTLUI_COMBO_BOX, 0, {logc, acescct, dwg, log3g10, slog3}, {ARRI Log-C, ACEScct, DaVinci Intermediate, RED Log3G10, Sony S-Log3})
+
+__DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B)
+{
+
+	float3 rgb = make_float3(p_R, p_G, p_B);
+
+	if (tonecurve == logc) {
+
+		rgb = logc_to_lin(rgb);
+	}
+
+	if (tonecurve == acescct) {
+	
+		rgb = acescct_to_lin(rgb);
+	}
+
+	if (tonecurve == dwg) {
+	
+		rgb = dwg_to_lin(rgb);
+	}
+	
+	if (tonecurve == log3g10) {
+	
+		rgb = log3g10_to_lin(rgb);
+	}
+	
+	if (tonecurve == slog3) {
+	
+		rgb = slog3_to_lin(rgb);
+	}
+	
+	
+
+	rgb.x = rgb.x * _exp2f(exposure);
+	rgb.y = rgb.y * _exp2f(exposure);
+	rgb.z = rgb.z * _exp2f(exposure);
+	
+	rgb.x = rgb.x * (1 + temp);
+	rgb.z = rgb.z * (1 - temp);
+	
+	rgb.y = rgb.y * (1 + tint);
+	
+	
+	
+	
+
+
+
+	if (tonecurve == logc) {
+		
+		rgb = lin_to_logc(rgb);
+	}
+
+	if (tonecurve == acescct) {
+	
+		rgb = lin_to_acescct(rgb);
+	}
+	
+	if (tonecurve == dwg) {
+	
+		rgb = lin_to_dwg(rgb);
+	}
+	
+	if (tonecurve == log3g10) {
+	
+		rgb = lin_to_log3g10(rgb);
+	}
+	
+	if (tonecurve == slog3) {
+	
+		rgb = lin_to_slog3(rgb);
+	}
+	
+	
+	return rgb;
+}
