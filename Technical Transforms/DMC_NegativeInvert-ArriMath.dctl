@@ -1,0 +1,30 @@
+// By Nico Fink, DeMystify Colorgrading
+// Based on the BlinkScript by Juan Pable Zambrano (https://github.com/JuanPabloZambrano)
+// Original math by Harald Brendel from ARRI (http://dicomp.arri.de/digital/digital_systems/DIcompanion/ch03.html?fbclid=IwAR281VS31--dPMBYj2HlCpt0yS8osYZS_5ZQy02qOSNOiu-kKws3PwbgV-c#id592199)
+// Learn more: www.demystify-color.com/filmprofiling
+
+DEFINE_UI_PARAMS(Density, Density, DCTLUI_SLIDER_FLOAT, 2.046.0, 0.0, 4.0, 0.001)
+DEFINE_UI_PARAMS(Offset, Offset, DCTLUI_SLIDER_FLOAT, 95.0, 0, 500.0, 1)
+DEFINE_UI_PARAMS(DminR, D-Min Red, DCTLUI_SLIDER_FLOAT, 1, 0.0, 1, 0.001)
+DEFINE_UI_PARAMS(DminG, D-Min Green, DCTLUI_SLIDER_FLOAT, 1, 0.0, 1, 0.001)
+DEFINE_UI_PARAMS(DminB, D-Min Blue, DCTLUI_SLIDER_FLOAT, 1, 0.0, 1, 0.001)
+DEFINE_UI_PARAMS(scaleR, Scale Red, DCTLUI_SLIDER_FLOAT, 1.0, -1.0, 2.0, 0.1)
+DEFINE_UI_PARAMS(scaleG, Scale Green, DCTLUI_SLIDER_FLOAT, 1.0, -1.0, 2.0, 0.1)
+DEFINE_UI_PARAMS(scaleB, Scale Blue, DCTLUI_SLIDER_FLOAT, 1.0, -1.0, 2.0, 0.1)
+
+
+__DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B) {
+
+    float3 inRGB = make_float3(p_R, p_G, p_B);
+    float3 out = inRGB;
+    
+    out.x = _log10f(DminR / out.x);
+    out.y = _log10f(DminG / out.y);
+    out.z = _log10f(DminB / out.z);
+
+    out.x = (scaleR * out.x * (1023.0f / Density) + Offset) * (1.0f / 1023.0f);
+    out.y = (scaleG * out.y * (1023.0f / Density) + Offset) * (1.0f / 1023.0f);
+    out.z = (scaleB * out.z * (1023.0f / Density) + Offset) * (1.0f / 1023.0f);
+
+    return out;
+}
