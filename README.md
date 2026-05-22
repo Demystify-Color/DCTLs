@@ -3,4 +3,4 @@ Free DCTLs for Blackmagic Design DaVinci Resolve including technical transforms,
 Written by Nico Fink.
 Insights/Tutorials of these DCTLs available on: www.demystify-color.com/dctl-coding
 
-If you like what you see and want to support me check out my website or consider to buymeacoffee.com/nicofink please🙏🏻✌🏻😊
+If you like what you see and want to support me check out my website or consider to www.buymeacoffee.com/nicofink please🙏🏻✌🏻😊
